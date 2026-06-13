@@ -1,0 +1,29 @@
+# HTTP Host Configuration
+http.host: "0.0.0.0"  
+
+# Path to Logstash Pipelines
+path.config: /usr/share/logstash/pipeline  
+
+# Enable Automatic Pipeline Reloading
+config.reload.automatic: true  
+config.reload.interval: 10s  
+
+log.level: info  
+
+xpack.monitoring.enabled: true
+xpack.monitoring.elasticsearch:
+  hosts: ["http://elasticsearch:9200"] # Elasticsearch monitoring endpoint
+  username: "elastic"
+  password: "linh"
+
+
+
+pipeline.batch.delay: 50  # Reduce batch delay to 50ms 
+pipeline.workers: 4  # Increase the number of pipeline workers
+pipeline.batch.size: 200  # Increase the batch size to optimize throughput
+
+queue.type: persisted  
+queue.max_bytes: 1gb
+
+
+

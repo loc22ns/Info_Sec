@@ -1,0 +1,33 @@
+# Filebeat Inputs Configuration
+filebeat.inputs:
+  - type: log
+    enabled: true
+    scan_frequency: 1s  # Check for new logs every 1 second
+    paths:
+      - /var/log/apache2/access.log
+    fields:
+      type: "apache_access"
+    fields_under_root: true  
+
+  - type: log
+    enabled: true
+    scan_frequency: 1s
+    paths:
+      - /var/log/apache2/error.log
+    fields:
+      type: "apache_error"
+    fields_under_root: true  
+
+  - type: log
+    enabled: true
+    scan_frequency: 1s
+    paths:
+      - /var/log/apache2/other_vhosts_access.log
+    fields:
+      type: "apache_vhosts"
+    fields_under_root: true  
+
+# Output to Logstash
+output.logstash:
+  hosts: 
+    - "logstash:5044"

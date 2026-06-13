@@ -1,0 +1,77 @@
+version: '3.8'
+
+networks:
+  app_network:  # For web, MySQL, and BELK
+    driver: bridge
+
+services:
+
+  elasticsearch:
+    restart: unless-stopped
+    container_name: elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.15.0
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+      - ELASTIC_PASSWORD=linh  
+      - xpack.security.enabled=true
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    networks:
+      - app_network
+
+  kibana:
+    restart: unless-stopped
+    container_name: kibana
+    image: docker.elastic.co/kibana/kibana:7.15.0
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=elastic
+      - ELASTICSEARCH_PASSWORD=linh
+      - xpack.security.enabled=true
+      - monitoring.ui.enabled=false
+    depends_on:
+      - elasticsearch
+    ports:
+      - "5601:5601"
+    networks:
+      - app_network
+
+  logstash:
+    restart: unless-stopped
+    container_name: logstash
+    image: docker.elastic.co/logstash/logstash:7.15.0
+    ports:
+      - "5044:5044"
+      - "9600:9600"
+    volumes:
+      - ./Logstash/pipeline:/usr/share/logstash/pipeline:ro
+      - ./Logstash/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
+    environment:
+      - LS_JAVA_OPTS=-Xms256m -Xmx256m
+      - CHAT_ID=5867140056
+      - BOT_TOKEN=7920179560:AAG0QBHGYX3ARHdjzXZFInbLrsiU483hO3o
+    depends_on:
+      - elasticsearch
+    networks:
+      - app_network
+
+  filebeat:
+    restart: unless-stopped
+    container_name: filebeat
+    build:
+      context: ./filebeat
+    command: filebeat -e -strict.perms=false
+    volumes:
+      - ./logs:/app/logs
+      - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - ./nginx/logs:/nginx/logs
+      - ./nginx/owasp/modsecurity-logs:/waf/logs
+    depends_on:
+      - logstash
+      - elasticsearch
+      - kibana
+    networks:
+      - app_network
